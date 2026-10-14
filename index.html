@@ -235,7 +235,7 @@ function cellSchemeSVG(sh){
 function tableHTML(){
     const n=data.shifts.length;
     let html=`<colgroup><col style="width:145px">${data.shifts.map(()=>`<col>`).join("")}</colgroup><thead><tr><th class="stub">№ сменной захватки</th>${data.shifts.map(s=>`<th>Захватка ${esc(s.name)}</th>`).join("")}</tr></thead><tbody>`;
-    html+=`<tr><th class="stub">Наименование и номера процессов</th>${data.shifts.map(s=>`<td><ol class="oplist">${s.operations.length?s.operations.map(op=>`<li>${esc(op.name)}</li>`).join(""):"<li>Работы не добавлены</li>"}</ol></td>`).join("")}</tr>`;
+    html+=`<tr><th class="stub">Наименование процессов</th>${data.shifts.map(s=>`<td><ol class="oplist">${s.operations.length?s.operations.map(op=>`<li>${esc(op.name)}</li>`).join(""):"<li>Работы не добавлены</li>"}</ol></td>`).join("")}</tr>`;
     html+=`<tr><th class="stub">Длина захватки, м</th>${data.shifts.map(s=>`<td style="text-align:center;font-weight:bold">${+s.length||0}</td>`).join("")}</tr>`;
     html+=`<tr><th class="stub">Машины, потребные на каждую схему и их загрузка на захватках</th>${data.shifts.map(s=>{let all=[];s.operations.forEach(op=>op.machines.forEach(m=>all.push(m)));if(!all.length)return "<td>Не указаны</td>";return `<td><ul class="machlist">${all.map((m,j)=>`<li><span class="mname">${j+1}. ${esc(m.name)}</span><span class="mload">загрузка: ${(+m.load||0).toFixed(2)}</span></li>`).join("")}</ul></td>`}).join("")}</tr>`;
     html+=`<tr><th class="stub">Схема организации потока</th>${data.shifts.map(s=>cellSchemeSVG(s)).join("")}</tr>`;
