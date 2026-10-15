@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Конструктор технологической карты</title>
+<style>
+:root{--ink:#202939;--line:#aeb8c5;--blue:#2457c5;--print-zoom:1}
+*{box-sizing:border-box}body{margin:0;background:#eef2f6;color:var(--ink);font:14px Arial,sans-serif;padding-top:56px}button,input,textarea,select{font:inherit}button{cursor:pointer}
+.bar{background:#172033;color:white;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:fixed;top:0;left:0;right:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.btn{padding:8px 11px;border:1px solid #cbd5e1;border-radius:5px;background:white;color:#172033}.primary{background:var(--blue);border-color:var(--blue);color:white}.danger{color:#b42318;background:#fff5f5}.mini{padding:4px 8px;font-size:11px}
+.layout{display:grid;grid-template-columns:380px minmax(0,1fr);height:calc(100vh - 56px)}
+aside{padding:14px;background:#f8fafc;border-right:1px solid #cbd5e1;overflow-y:auto}
+.panel{background:white;border:1px solid #cbd5e1;border-radius:7px;margin-bottom:12px;overflow:hidden}.panel h2{font-size:13px;background:#f1f5f9;padding:10px 12px;margin:0;border-bottom:1px solid #cbd5e1}.inside{padding:11px}
+.field{margin-bottom:9px}.field label{display:block;font-size:12px;color:#667085;margin-bottom:4px}.field input,.field textarea,.field select{width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:4px}.field textarea{min-height:58px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}.hint{font-size:12px;line-height:1.45;color:#667085}
+.shift{border:1px solid #cbd5e1;border-radius:6px;margin:9px 0;overflow:hidden}.shifthead{padding:7px 8px;background:#f8fafc;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e2e8f0}.shiftbody{padding:9px}
+.opblock{border:1px dashed #cbd5e1;border-radius:5px;padding:7px;margin:7px 0;background:#fbfdff}
+.ophead{display:grid;grid-template-columns:18px 1fr 22px;gap:5px;align-items:center;margin-bottom:5px}.ophead .num{font-size:11px;color:#475467;text-align:center}.ophead select,.ophead input{padding:5px;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;width:100%}.ophead button{border:1px solid #f2b8b5;border-radius:4px}
+.mach-block{border:1px solid #e2e8f0;border-radius:4px;padding:5px;margin:5px 0 5px 18px;background:white}
+.mach-row1{display:grid;grid-template-columns:18px 1fr 60px 22px;gap:4px;align-items:center}
+.mach-row2{display:grid;grid-template-columns:18px 1fr 60px 60px;gap:4px;align-items:center;margin-top:4px}
+.mach-block select,.mach-block input{padding:4px;border:1px solid #cbd5e1;border-radius:4px;font-size:11px;min-width:0;width:100%}
+.mach-block .num{font-size:11px;color:#475467;text-align:center}
+.mach-block .lbl{font-size:10px;color:#94a3b8}
+.mach-block button{border:1px solid #f2b8b5;border-radius:4px;padding:2px 4px}
+.addrow{padding-left:18px;margin-top:4px}
+.preview{padding:14px;overflow:auto;background:#e2e8f0}
+.paper{background:white;padding:8mm;box-sizing:border-box;margin:auto;box-shadow:0 3px 20px #17203318}
+.paper.fmt-a3{width:420mm;min-height:297mm}
+.paper.fmt-a4{width:297mm;min-height:210mm}
+.title{text-align:center;font-size:15px;font-weight:bold;margin:0 0 3px}.subtitle{text-align:center;font-size:10px;margin-bottom:6px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;font-size:9px;padding:5px;border:1px solid #202939;margin-bottom:7px}
+.tech{border-collapse:collapse;table-layout:fixed;width:100%;font-size:10px}
+.tech th,.tech td{border:1px solid #202939;padding:5px;vertical-align:top;overflow-wrap:anywhere}
+.tech th{background:#f8fafc;text-align:center}.tech .stub{width:145px;text-align:left;background:#f8fafc}
+.oplist{margin:0;padding-left:14px}.oplist>li{margin-bottom:4px}
+.machlist{margin:0;padding-left:0;list-style:none;color:#202939;font-size:10px}.machlist li{margin-bottom:6px;line-height:1.35}
+.machlist .mname{display:block}.machlist .mload{display:block;padding-left:14px;color:#475467}
+.cell-scheme{padding:4px 2px;text-align:center}.cell-scheme svg{display:block;margin:0 auto;width:100%;height:auto;max-width:100%}
+.user-scheme-img{max-width:100%;max-height:180px;display:block;margin:0 auto}
+.break-cell{width:10mm;min-width:10mm;max-width:10mm;text-align:center;vertical-align:middle!important;padding:4px!important;white-space:normal;overflow-wrap:anywhere;font-size:9px;background:#fffdf5}
+.break-cell span{display:block;writing-mode:vertical-rl;transform:rotate(180deg);margin:auto;max-height:100%;font-weight:bold}
+.hourgraph{width:100%;min-width:90px;display:block;touch-action:none}
+.hour-stub{position:relative;text-align:center!important;vertical-align:middle!important}
+.hour-title{display:inline-block;text-align:center;max-width:100px}
+.hour-stub .time-label{display:block;font-size:9px;font-weight:bold;margin:0 auto 4px;writing-mode:vertical-rl;transform:rotate(180deg);height:100px;text-align:center}
+.hour-tick{font-size:8px;fill:#475467;text-anchor:start;dominant-baseline:middle;pointer-events:none}
+.hour-minor{stroke:#e7eaf0;stroke-width:.5}.hour-major{stroke:#cbd5e1;stroke-width:.8}
+.hour-line{stroke-width:3;cursor:grab}
+.hour-endpoint{cursor:ns-resize;stroke:#202939;stroke-width:1.5;fill:white}
+.machine-label{font-size:8px;fill:#202939;pointer-events:none;text-anchor:middle;paint-order:stroke;stroke:white;stroke-width:2px;stroke-linejoin:round}
+.time-label-line{font-size:7px;fill:#2457c5;pointer-events:none;text-anchor:middle;paint-order:stroke;stroke:white;stroke-width:2px;stroke-linejoin:round}
+.hourgraph{overflow:visible}
+.direction-line{border:1px solid #202939;border-top:0;background:white;padding:5px}
+.direction-arrow{display:block;width:100%;height:28px}.direction-arrow text{font-size:11px;fill:#dc2626}
+.note{font-size:10px;margin-top:8px;padding:8px;border:1px solid #202939}.note h4{margin:0 0 5px;font-size:11px}.note p{margin:3px 0}
+.stale{background:#fff8e1;border:1px solid #f0c36d;color:#7a5b00;padding:8px 10px;font-size:12px;border-radius:5px;margin-bottom:10px;position:sticky;top:0;z-index:5}
+
+.sheet-view{position:relative;width:100%;overflow:auto;background:#334155;border-radius:6px;padding:10px;display:flex;justify-content:center;align-items:flex-start}
+.sheet-frame{position:relative;background:white;box-shadow:0 4px 12px rgba(0,0,0,.35);overflow:hidden;flex:0 0 auto;border:1px solid #1e293b}
+.sheet-inner{position:absolute;top:0;left:0;transform-origin:top left}
+.fitinfo{font-size:11px;color:#475467;margin-top:8px;line-height:1.5}
+.fitinfo b{color:#202939}.fitinfo .bad{color:#b42318;font-weight:bold}.fitinfo .ok{color:#067647;font-weight:bold}
+
+@media print{
+    body{padding-top:0;background:white}
+    .bar,aside,.stale{display:none!important}
+    .layout{display:block;height:auto}
+    .preview{padding:0;overflow:visible;background:white}
+    .paper{width:100%;min-height:0;padding:0;margin:0;box-shadow:none;transform:none!important}
+    .fitwrap{zoom:var(--print-zoom,1);transform-origin:top left}
+    .title{font-size:16pt}.subtitle{font-size:12pt;margin-bottom:8pt}
+    .meta{font-size:11pt;gap:6pt 14pt;padding:6pt}
+    .tech{font-size:12pt}.tech th,.tech td{padding:4pt 5pt}.tech .stub{width:26%}
+    .oplist{font-size:12pt;padding-left:16pt}.oplist>li{margin-bottom:3pt}
+    .machlist{font-size:11pt}.machlist .mload{padding-left:16pt}
+    .figure,.note{break-inside:avoid}
+    .note{font-size:11pt}.note h4{font-size:12pt}
+    body.format-a4 .tech{font-size:11pt}
+    body.format-a4 .tech th,body.format-a4 .tech td{padding:3pt 4pt}
+    body.format-a4 .oplist,body.format-a4 .machlist{font-size:11pt}
+    body.format-a4 .title{font-size:15pt}
+    body.format-a4 .subtitle{font-size:11pt}
+    body.format-a4 .meta{font-size:10.5pt}
+}
+@media(max-width:900px){.layout{grid-template-columns:1fr;height:auto}aside{max-height:none;overflow:visible}.preview{overflow:visible}.bar{align-items:flex-start;flex-direction:column}}
+</style></head><body>
+<header class="bar"><b>Конструктор технологических карт · линейные объекты</b><div class="actions"><button class="btn primary" onclick="updateDoc()">▶ Обновить техкарту</button><button class="btn" onclick="save()">Сохранить JSON</button><button class="btn" onclick="$('upload').click()">Загрузить JSON</button><button class="btn" onclick="printDocument()">Печать / PDF</button><input id="upload" type="file" accept=".json,application/json" hidden onchange="load(event)"></div></header>
+<div class="layout"><aside>
+<section class="panel"><h2>1. Общие сведения</h2><div class="inside">
+<div class="field"><label>Наименование объекта</label><input id="obj" value="Строительство автомобильной дороги"></div>
+<div class="field"><label>Вид работ</label><input id="kind" value="Земляные работы"></div>
+<div class="field"><label>Организация</label><input id="org" value="Строительная организация"></div>
+<div class="field"><label>Подзаголовок (на титуле)</label><input id="subtitle" value="на производство работ на линейном объекте"></div>
+<div class="two">
+    <div class="field"><label>Смена, ч</label><input id="hours" type="number" min="1" max="24" value="8"></div>
+    <div class="field"><label>Начало смены, ч</label><input id="shiftStart" type="number" min="0" max="23" value="8"></div>
+</div>
+<div class="field"><label>Направление потока</label><select id="direction"><option value="right">Слева направо</option><option value="left">Справа налево</option></select></div>
+<div class="field"><label>Примечание (пусто — блок скрыт на листе)</label><textarea id="note">Состав и последовательность работ уточняются по рабочей документации, ППР и применимым нормативным требованиям.</textarea></div>
+</div></section>
+<section class="panel"><h2>2. Захватки: длина, работы, машины</h2><div class="inside"><p class="hint">Начало работ — абсолютное время (например, 08:00). Длительность — в часах.</p><div id="editor"></div><button class="btn primary" style="width:100%" onclick="addShift()">+ Добавить захватку</button></div></section>
+<section class="panel"><h2>3. Организационный перерыв</h2><div class="inside"><label style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><input type="checkbox" id="breakEnabled" onchange="setBreakEnabled(this.checked)"> Добавить перерыв</label><div class="field"><label>Текст столбца</label><input id="breakText" value="организационный перерыв 2 смены" onchange="setBreakText(this.value)"></div><div class="field"><label>Ввести перерыв после:</label><select id="breakAfter" onchange="setBreakAfter(this.value)"></select></div></div></section>
+<section class="panel"><h2>4. Формат листа и предпросмотр</h2><div class="inside">
+<div class="two">
+  <div class="field"><label>Формат листа</label><select id="format"><option value="a3">A3 (альбомная)</option><option value="a4">A4 (альбомная)</option></select></div>
+  <div class="field"><label>Масштаб, %</label><input type="number" id="fitScale" min="20" max="100" step="1" value="100"></div>
+</div>
+<label style="display:flex;gap:8px;align-items:center;font-size:13px;margin-bottom:8px"><input type="checkbox" id="fitOne"><span>Автоподбор под один лист</span></label>
+<button class="btn primary" style="width:100%" onclick="checkFit()">🔍 Проверить вид</button>
+<div class="fitinfo" id="fitInfo">Нажмите «Проверить вид», чтобы построить предпросмотр.</div>
+<div class="sheet-view" id="sheetView" style="display:none;margin-top:10px">
+  <div class="sheet-frame" id="sheetFrame">
+    <div class="sheet-inner" id="sheetInner">
+      <div class="paper" id="paperMini">
+        <div class="fitwrap" id="miniFitwrap">
+          <h1 class="title">ТЕХНОЛОГИЧЕСКАЯ КАРТА</h1>
+          <div class="subtitle" id="miniSubtitle"></div>
+          <div class="meta"><div><b>Объект:</b> <span id="miniObj"></span></div><div><b>Организация:</b> <span id="miniOrg"></span></div><div><b>Вид работ:</b> <span id="miniKind"></span></div><div><b>Смена:</b> <span id="miniHours"></span> ч</div></div>
+          <div id="miniTableWrap"></div>
+          <div class="note" id="miniNoteBox"><h4>Примечание</h4><p id="miniNote"></p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div></section>
+</aside>
+<main class="preview">
+<div class="stale" id="stale" hidden>Есть несохранённые изменения. Нажмите «Обновить техкарту».</div>
+<article class="paper" id="paper">
+<div class="fitwrap" id="fitwrap">
+<h1 class="title">ТЕХНОЛОГИЧЕСКАЯ КАРТА</h1><div class="subtitle" id="oSubtitle"></div>
+<div class="meta"><div><b>Объект:</b> <span id="oObj"></span></div><div><b>Организация:</b> <span id="oOrg"></span></div><div><b>Вид работ:</b> <span id="oKind"></span></div><div><b>Продолжительность смены:</b> <span id="oHours"></span> ч</div></div>
+<div id="tableWrap"></div>
+<div class="note" id="oNoteBox"><h4>Примечание</h4><p id="oNote"></p></div>
+</div>
+</article></main></div>
+<script>
+const $=id=>document.getElementById(id), roman=["I","II","III","IV","V","VI","VII","VIII","IX","X"];
+const MM=96/25.4;
+const PAGE={a3:{w:420,h:297},a4:{w:297,h:210}};
+const MARGIN_MM=8;
+
+const MACHINE_DB=["Бульдозер ДЗ-171","Бульдозер ДЗ-109","Бульдозер CAT D6R","Бульдозер Т-170","Автогрейдер ДЗ-122","Автогрейдер ДЗ-98","Автогрейдер CAT 140K","Экскаватор ЭО-4121","Экскаватор Hitachi ZX200","Экскаватор CAT 320D","Экскаватор-драглайн Э-652Б","Скрепер МоАЗ-6014-1","Скрепер ДЗ-13","Скрепер CAT 621G","Каток ДУ-96","Каток ДУ-98","Каток ДУ-101","Каток Bomag BW 213","Асфальтоукладчик ДС-195","Асфальтоукладчик Vögele Super 1600","Самосвал КАМАЗ-6520","Самосвал Volvo FMX","Самосвал МАЗ-5516","Погрузчик фронтальный L-34","Автобетоносмеситель АБС-6"];
+const WORK_DB=["Снятие растительного слоя грунта бульдозером","Разработка грунта экскаватором","Разработка грунта скрепером","Транспортировка грунта самосвалами","Планировка верха земляного полотна автогрейдером","Зачистка откосов автогрейдером","Нарезка кюветов","Уплотнение земляного полотна катком","Устройство щебёночного основания","Распределение щебня автогрейдером","Увлажнение слоя водой","Укладка асфальтобетонной смеси укладчиком","Подвоз асфальтобетонной смеси самосвалами","Уплотнение асфальтобетонного покрытия катком","Устройство обочин","Устройство водоотвода","Геодезическая разбивка","Уборка рабочей зоны"];
+
+let data={
+    obj:"Строительство автомобильной дороги",kind:"Земляные работы",org:"Строительная организация",subtitle:"на производство работ на линейном объекте",
+    hours:8,shiftStart:8,format:"a3",direction:"right",fitOne:false,fitScale:100,
+    organizationalBreak:{enabled:false,after:1,text:"организационный перерыв 2 смены"},
+    note:"Состав и последовательность работ уточняются по рабочей документации, ППР и применимым нормативным требованиям.",
+    userSchemes:{},
+    shifts:[
+        {name:"I",length:100,operations:[{name:"Снятие растительного слоя грунта бульдозером",machines:[{name:"Бульдозер ДЗ-171",load:0.15,start:0,duration:8}]}]},
+        {name:"II",length:100,operations:[
+            {name:"Разработка грунта скрепером",machines:[{name:"Скрепер МоАЗ-6014-1",load:0.35,start:0,duration:6}]},
+            {name:"Зачистка откосов автогрейдером",machines:[{name:"Автогрейдер ДЗ-122",load:0.20,start:2,duration:4}]}
+        ]},
+        {name:"III",length:200,operations:[
+            {name:"Планировка верха земляного полотна автогрейдером",machines:[{name:"Автогрейдер ДЗ-122",load:0.40,start:0,duration:5}]},
+            {name:"Нарезка кюветов",machines:[{name:"Автогрейдер ДЗ-122",load:0.15,start:3,duration:3}]},
+            {name:"Уплотнение земляного полотна катком",machines:[{name:"Каток ДУ-101",load:0.55,start:2,duration:6}]}
+        ]}
+    ]
+};
+
+const MACHINE_PALETTE=["#dc2626","#2563eb","#059669","#d97706","#7c3aed","#db2777","#0891b2","#65a30d","#ea580c","#4f46e5"];
+function machineColor(name){
+    if(!window.__machColors)window.__machColors={};
+    const key=(name||"").trim();
+    if(!window.__machColors[key]){
+        const idx=Object.keys(window.__machColors).length%MACHINE_PALETTE.length;
+        window.__machColors[key]=MACHINE_PALETTE[idx];
+    }
+    return window.__machColors[key];
+}
+function esc(s){return String(s??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;")}
+function markStale(){const el=$("stale");if(el)el.hidden=false}
+function clearStale(){const el=$("stale");if(el)el.hidden=true}
+
+function timeToHours(str){
+    if(typeof str==="number")return str;
+    if(str==null)return 0;
+    str=String(str).trim();
+    if(/^\d+(\.\d+)?$/.test(str))return parseFloat(str);
+    const m=str.match(/^(\d{1,2}):(\d{2})$/);
+    if(m){
+        const h=+m[1],mi=+m[2];
+        let delta=h+mi/60-data.shiftStart;
+        if(delta<0)delta+=24;
+        return delta;
+    }
+    return 0;
+}
+function hoursToTime(v){
+    const abs=data.shiftStart+(+v||0);
+    const h=((Math.round(abs*4)/4)%24+24)%24;
+    const hh=Math.floor(h);
+    const mm=Math.round((h-hh)*60);
+    return String(hh).padStart(2,'0')+":"+String(mm).padStart(2,'0');
+}
+
+function general(){
+    data.obj=$("obj").value;data.kind=$("kind").value;data.org=$("org").value;data.subtitle=$("subtitle").value;
+    data.hours=Math.max(1,Math.min(24,+$("hours").value||8));
+    data.shiftStart=Math.max(0,Math.min(23,+$("shiftStart").value||0));
+    data.format=$("format").value;data.direction=$("direction").value;data.note=$("note").value;
+    data.fitOne=$("fitOne").checked;data.fitScale=+$("fitScale").value||100;
+}
+function machineOptions(sel){let known=MACHINE_DB.includes(sel);return MACHINE_DB.map(m=>`<option value="${esc(m)}" ${m===sel?"selected":""}>${esc(m)}</option>`).join("")+(known?"":`<option value="${esc(sel)}" selected>${esc(sel)}</option>`)+`<option value="__custom__">— вписать своё —</option>`}
+function workOptions(sel){let known=WORK_DB.includes(sel);return WORK_DB.map(w=>`<option value="${esc(w)}" ${w===sel?"selected":""}>${esc(w)}</option>`).join("")+(known?"":`<option value="${esc(sel)}" selected>${esc(sel)}</option>`)+`<option value="__custom__">— вписать своё —</option>`}
+
+/* ============ РЕДАКТОР ============ */
+function editor(){
+    let root=$("editor");root.innerHTML="";
+    data.shifts.forEach((s,si)=>{
+        let d=document.createElement("div");d.className="shift";
+        let opsHTML=s.operations.map((op,oi)=>`
+            <div class="opblock">
+              <div class="ophead">
+                <span class="num">${oi+1}.</span>
+                <select onchange="setOp(${si},${oi},this)">${workOptions(op.name)}</select>
+                <button onclick="delOp(${si},${oi})">×</button>
+              </div>
+              ${op.machines.map((m,mi)=>`
+                <div class="mach-block">
+                  <div class="mach-row1">
+                    <span class="num">${mi+1}</span>
+                    <select onchange="setMach(${si},${oi},${mi},'name',this)">${machineOptions(m.name)}</select>
+                    <input type="number" step="0.01" min="0" max="1" value="${+m.load||0}" onchange="setMach(${si},${oi},${mi},'load',this.value)" placeholder="0.00">
+                    <button onclick="delMach(${si},${oi},${mi})">×</button>
+                  </div>
+                  <div class="mach-row2">
+                    <span></span>
+                    <span class="lbl">начало / длительность</span>
+                    <input type="text" value="${hoursToTime(m.start||0)}" onchange="setMachStart(${si},${oi},${mi},this.value)" placeholder="08:00" title="Начало работ (ЧЧ:ММ)">
+                    <input type="number" step="0.25" min="0" max="${data.hours}" value="${+(m.duration??data.hours)}" onchange="setMach(${si},${oi},${mi},'duration',this.value)" placeholder="ч" title="Длительность, ч">
+                  </div>
+                </div>`).join("")}
+              <div class="addrow"><button class="btn mini" onclick="addMach(${si},${oi})">+ машина</button></div>
+            </div>`).join("");
+        const hasImg=!!(data.userSchemes&&data.userSchemes[si]);
+        d.innerHTML=`
+          <div class="shifthead"><b>Захватка ${esc(s.name)}</b><button class="btn danger" onclick="delShift(${si})">Удалить</button></div>
+          <div class="shiftbody">
+            <div class="two">
+              <div class="field"><label>Обозначение</label><input value="${esc(s.name)}" onchange="setShift(${si},'name',this.value)"></div>
+              <div class="field"><label>Длина, м</label><input type="number" min="1" value="${+s.length||100}" onchange="setShift(${si},'length',this.value)"></div>
+            </div>
+            <div class="field"><label>Своя схема захватки (PNG/JPG)</label>
+              <input type="file" accept="image/*" onchange="uploadShiftImage(event,${si})">
+              ${hasImg?`<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><img src="${data.userSchemes[si]}" style="max-height:60px;border:1px solid #cbd5e1"><button class="btn mini danger" onclick="clearShiftImage(${si})">Удалить</button></div>`:`<div class="hint">Не загружено — будет автоматическая схема.</div>`}
+            </div>
+            <div class="field"><label>Операции и машины</label>${opsHTML}<button class="btn" onclick="addOp(${si})">+ Добавить операцию</button></div>
+          </div>`;
+        root.appendChild(d);
+    });
+    renderBreakControls();
+}
+function setShift(i,k,v){data.shifts[i][k]=k==="length"?(Math.max(1,+v||100)):(v||roman[i]||String(i+1));editor();markStale()}
+function setOp(si,oi,el){let v=el.value;if(v==="__custom__"){let c=prompt("Введите наименование работы:","");if(!c){editor();return}v=c}data.shifts[si].operations[oi].name=v;editor();markStale()}
+function setMach(si,oi,mi,key,el){
+    const m=data.shifts[si].operations[oi].machines[mi];
+    if(key==="load"){let n=parseFloat(el.value);if(isNaN(n))n=0;n=Math.max(0,Math.min(1,n));m.load=n}
+    else if(key==="duration"){let n=parseFloat(el.value);if(isNaN(n))n=0;m.duration=Math.max(0,Math.min(data.hours,n))}
+    else if(key==="name"){if(el.value==="__custom__"){let c=prompt("Введите марку/название машины:","");if(!c){editor();return}m.name=c;editor()}else m.name=el.value}
+    markStale();
+}
+function setMachStart(si,oi,mi,v){const m=data.shifts[si].operations[oi].machines[mi];m.start=Math.max(0,Math.min(data.hours-0.25,timeToHours(v)));markStale()}
+function addOp(si){data.shifts[si].operations.push({name:WORK_DB[0],machines:[{name:MACHINE_DB[0],load:0,start:0,duration:data.hours}]});editor();markStale()}
+function delOp(si,oi){data.shifts[si].operations.splice(oi,1);editor();markStale()}
+function addMach(si,oi){data.shifts[si].operations[oi].machines.push({name:MACHINE_DB[0],load:0,start:0,duration:data.hours});editor();markStale()}
+function delMach(si,oi,mi){data.shifts[si].operations[oi].machines.splice(mi,1);editor();markStale()}
+function addShift(){let i=data.shifts.length;data.shifts.push({name:roman[i]||String(i+1),length:100,operations:[{name:WORK_DB[0],machines:[{name:MACHINE_DB[0],load:0,start:0,duration:data.hours}]}]});editor();markStale()}
+function delShift(i){if(data.shifts.length<2)return alert("Оставьте хотя бы одну захватку.");data.shifts.splice(i,1);delete data.userSchemes[i];editor();markStale()}
+
+function uploadShiftImage(ev,si){
+    const f=ev.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=()=>{if(!data.userSchemes)data.userSchemes={};data.userSchemes[si]=r.result;editor();markStale()};
+    r.readAsDataURL(f);ev.target.value="";
+}
+function clearShiftImage(si){delete data.userSchemes[si];editor();markStale()}
+
+function breakSettings(){if(!data.organizationalBreak)data.organizationalBreak={enabled:false,after:1,text:"организационный перерыв 2 смены"};return data.organizationalBreak}
+function renderBreakControls(){const b=breakSettings();const en=$("breakEnabled"),txt=$("breakText"),sel=$("breakAfter");if(!en)return;en.checked=!!b.enabled;txt.value=b.text||"";sel.innerHTML=data.shifts.map((sh,i)=>`<option value="${i+1}" ${(+b.after===i+1?"selected":"")}>После захватки ${esc(sh.name)}</option>`).join("");if(!data.shifts.some((sh,i)=>i+1===+b.after))b.after=1;sel.value=String(b.after)}
+function setBreakEnabled(v){breakSettings().enabled=v;markStale()}
+function setBreakText(v){breakSettings().text=v;markStale()}
+function setBreakAfter(v){breakSettings().after=+v||1;markStale()}
+
+/* ============ ИКОНКИ ============ */
+function machineIcon(kind){
+    switch(kind){
+        case 'bulldozer': return `<g><rect x="-15" y="-6" width="16" height="8" fill="#f5b800" stroke="#202939" stroke-width=".8" rx="1"/><rect x="1" y="-4" width="12" height="6" fill="#f5b800" stroke="#202939" stroke-width=".8"/><rect x="-18" y="2" width="30" height="2.4" fill="#202939"/><circle cx="-12" cy="6.4" r="2.8" fill="#202939"/><circle cx="-4" cy="6.4" r="2.8" fill="#202939"/><circle cx="4" cy="6.4" r="2.8" fill="#202939"/><circle cx="11" cy="6.4" r="2.8" fill="#202939"/></g>`;
+        case 'grader': return `<g><rect x="-17" y="-4" width="34" height="6" fill="#e9a10a" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-6" y="-10" width="12" height="6" fill="#e9a10a" stroke="#202939" stroke-width=".8"/><rect x="-15" y="2" width="30" height="2" fill="#202939"/><circle cx="-10" cy="6" r="2.8" fill="#202939"/><circle cx="10" cy="6" r="2.8" fill="#202939"/></g>`;
+        case 'excavator': return `<g><rect x="-15" y="-4" width="28" height="8" fill="#f5b800" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-6" y="-12" width="13" height="10" fill="#f5b800" stroke="#202939" stroke-width=".8"/><path d="M 7 -10 L 17 -16 L 19 -12 L 9 -6 Z" fill="#f5b800" stroke="#202939" stroke-width=".8"/><rect x="-17" y="3" width="34" height="2" fill="#202939"/><circle cx="-10" cy="7" r="2.8" fill="#202939"/><circle cx="10" cy="7" r="2.8" fill="#202939"/></g>`;
+        case 'roller': return `<g><rect x="-10" y="-10" width="20" height="10" fill="#f5b800" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-16" y="-2" width="32" height="6" fill="#202939"/><circle cx="0" cy="4" r="6" fill="none" stroke="#202939" stroke-width="1.2"/><circle cx="0" cy="4" r="2.4" fill="#202939"/></g>`;
+        case 'paver': return `<g><rect x="-15" y="-4" width="20" height="10" fill="#f5b800" stroke="#202939" stroke-width=".8" rx="1"/><path d="M 5 -4 L 17 -6 L 18 -2 L 7 2 Z" fill="#f5b800" stroke="#202939" stroke-width=".8"/><rect x="-18" y="4" width="14" height="4" fill="#f5b800" stroke="#202939" stroke-width=".8"/><rect x="-20" y="8" width="40" height="2" fill="#202939"/><circle cx="-8" cy="7" r="2.4" fill="#202939"/><circle cx="8" cy="7" r="2.4" fill="#202939"/></g>`;
+        case 'truck': return `<g><rect x="-6" y="-10" width="10" height="8" fill="#3b82f6" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-16" y="-5" width="12" height="10" fill="#3b82f6" stroke="#202939" stroke-width=".8" rx="1"/><rect x="5" y="-2" width="10" height="8" fill="#3b82f6" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-18" y="4" width="34" height="2" fill="#202939"/><circle cx="-10" cy="7" r="2.8" fill="#202939"/><circle cx="2" cy="7" r="2.8" fill="#202939"/><circle cx="12" cy="7" r="2.8" fill="#202939"/></g>`;
+        case 'scraper': return `<g><rect x="-14" y="-4" width="20" height="8" fill="#f5b800" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-18" y="4" width="10" height="3" fill="#202939"/><rect x="6" y="-6" width="13" height="10" fill="#f5b800" stroke="#202939" stroke-width=".8"/><circle cx="-10" cy="7" r="2.8" fill="#202939"/><circle cx="12" cy="7" r="2.8" fill="#202939"/></g>`;
+        case 'loader': return `<g><rect x="-10" y="-2" width="20" height="8" fill="#f5b800" stroke="#202939" stroke-width=".8" rx="1"/><rect x="-2" y="-10" width="10" height="8" fill="#f5b800" stroke="#202939" stroke-width=".8"/><path d="M 10 -2 L 20 2 L 20 4 L 10 4 Z" fill="#f5b800" stroke="#202939" stroke-width=".8"/><rect x="-16" y="4" width="32" height="2" fill="#202939"/><circle cx="-6" cy="7" r="2.4" fill="#202939"/><circle cx="8" cy="7" r="2.4" fill="#202939"/></g>`;
+        default: return `<g><rect x="-12" y="-4" width="24" height="8" fill="#cbd5e1" stroke="#202939" stroke-width=".8" rx="1"/><circle cx="-8" cy="6" r="2.8" fill="#202939"/><circle cx="8" cy="6" r="2.8" fill="#202939"/></g>`;
+    }
+}
+function detectMachine(name){const s=(name||"").toLowerCase();
+    if(s.includes('бульдозер')) return 'bulldozer';
+    if(s.includes('автогрейдер')) return 'grader';
+    if(s.includes('экскаватор')||s.includes('драглайн')) return 'excavator';
+    if(s.includes('каток')) return 'roller';
+    if(s.includes('асфальтоукладчик')||s.includes('укладчик')||s.includes('vögele')) return 'paver';
+    if(s.includes('самосвал')||s.includes('volvo')||s.includes('камаз')||s.includes('маз')) return 'truck';
+    if(s.includes('скрепер')) return 'scraper';
+    if(s.includes('погрузчик')) return 'loader';
+    return 'default';
+}
+function cellSchemeHTML(sh){
+    const si=data.shifts.indexOf(sh);
+    if(data.userSchemes&&data.userSchemes[si]){
+        return `<td class="cell-scheme"><img class="user-scheme-img" src="${data.userSchemes[si]}" alt="Схема"></td>`;
+    }
+    const seen=new Set(), icons=[];
+    sh.operations.forEach(op=>op.machines.forEach(m=>{
+        const kind=detectMachine(m.name);
+        const key=kind+'_'+m.name;
+        if(seen.has(key))return; seen.add(key);
+        icons.push({kind,name:m.name});
+    }));
+    if(!icons.length) return `<td class="cell-scheme" style="color:#94a3b8;font-style:italic;padding:8px">Схема не сформирована</td>`;
+    const perRow=4, iconW=40, iconH=34;
+    const rows=Math.ceil(icons.length/perRow);
+    const W=Math.max(180, Math.min(icons.length,perRow)*iconW+8);
+    const H=rows*iconH+8;
+    let svg=`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">`;
+    icons.forEach((ic,i)=>{
+        const row=Math.floor(i/perRow), col=i%perRow;
+        const cx=8+col*iconW+iconW/2, cy=6+row*iconH+iconH/2;
+        svg+=`<g transform="translate(${cx},${cy})">${machineIcon(ic.kind)}</g>`;
+    });
+    svg+=`</svg>`;
+    return `<td class="cell-scheme">${svg}</td>`;
+}
+
+function hourGraphSVG(sh){
+    const ms=[];sh.operations.forEach(op=>op.machines.forEach(m=>ms.push(m)));
+    const hrs=data.hours;
+    const H=Math.max(hrs*22,120), W=230, top=10, bottom=H-10, plotH=bottom-top, left=8, right=W-42;
+    let out=`<svg class="hourgraph" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+    for(let q=0;q<=hrs*2;q++){
+        const t=q/2, y=bottom-plotH*t/hrs, major=q%2===0;
+        out+=`<line class="${major?'hour-major':'hour-minor'}" x1="2" y1="${y}" x2="${right+2}" y2="${y}"/>`;
+        if(major)out+=`<text class="hour-tick" x="${right+5}" y="${y}">${hoursToTime(t)}</text>`;
+    }
+    ms.forEach(m=>{
+        const startAbs=Math.max(0,Math.min(hrs-0.25,+(m.start??0)));
+        const dur=Math.max(0.25,Math.min(hrs-startAbs,+(m.duration??hrs)));
+        const y1=bottom-plotH*startAbs/hrs;
+        const y2=bottom-plotH*(startAbs+dur)/hrs;
+        const x1=left,x2=right;
+        const color=machineColor(m.name);
+        out+=`<line class="hour-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" onpointerdown="beginGraphDrag(event,${data.shifts.indexOf(sh)},${ms.indexOf(m)},'move')"/>`;
+        out+=`<circle class="hour-endpoint" cx="${x1}" cy="${y1}" r="3.5" stroke="${color}" onpointerdown="beginGraphDrag(event,${data.shifts.indexOf(sh)},${ms.indexOf(m)},'start')"/>`;
+        out+=`<circle class="hour-endpoint" cx="${x2}" cy="${y2}" r="3.5" stroke="${color}" onpointerdown="beginGraphDrag(event,${data.shifts.indexOf(sh)},${ms.indexOf(m)},'end')"/>`;
+        const angle=Math.atan2(y2-y1,x2-x1)*180/Math.PI,midX=(x1+x2)/2,midY=(y1+y2)/2;
+        out+=`<text class="machine-label" x="${midX}" y="${midY-4}" transform="rotate(${angle} ${midX} ${midY-4})" style="fill:${color}">${esc(m.name)}</text>`;
+        out+=`<text class="time-label-line" x="${midX}" y="${midY+8}" transform="rotate(${angle} ${midX} ${midY+8})" style="fill:${color}">${hoursToTime(startAbs)}–${hoursToTime(startAbs+dur)}</text>`;
+    });
+    out+='</svg>';
+    return `<td class="cell-scheme">${out}</td>`;
+}
+function beginGraphDrag(ev,si,mi,mode){
+    ev.preventDefault();ev.stopPropagation();
+    const svg=ev.currentTarget.ownerSVGElement,rect=svg.getBoundingClientRect();
+    const H=+svg.viewBox.baseVal.height,hrs=data.hours,top=10,bottom=H-10,plotH=bottom-top;
+    const ms=[];data.shifts[si].operations.forEach(op=>op.machines.forEach(m=>ms.push(m)));
+    const m=ms[mi];if(!m)return;
+    let lastY=ev.clientY;
+    const move=e=>{
+        let dy=(e.clientY-lastY)*(H/rect.height);
+        let delta=-dy*hrs/plotH;
+        const snap=v=>Math.round(v*4)/4;
+        let st=+(m.start??0),dur=+(m.duration??hrs);
+        if(mode==='start'){const newSt=snap(Math.max(0,Math.min(hrs-0.25,st+delta)));dur=snap(Math.max(0.25,dur+(st-newSt)));m.start=newSt;m.duration=dur}
+        else if(mode==='end'){m.duration=snap(Math.max(0.25,Math.min(hrs-st,dur+delta)))}
+        else{const newSt=snap(Math.max(0,Math.min(hrs-dur,st+delta)));m.start=newSt}
+        lastY=e.clientY;renderMain();markStale();
+    };
+    const up=()=>{window.removeEventListener('pointermove',move);window.removeEventListener('pointerup',up)};
+    window.addEventListener('pointermove',move);window.addEventListener('pointerup',up,{once:true});
+}
+
+/* ============ ТАБЛИЦА (безопасная вставка) ============ */
+function buildTableHTML(){
+    const b=breakSettings(),n=data.shifts.length,breakAfter=Math.max(1,Math.min(n,+b.after||1));
+    let cols='<col style="width:145px">';
+    data.shifts.forEach((s,i)=>{cols+='<col>';if(b.enabled&&i+1===breakAfter)cols+='<col style="width:10mm">'});
+    let html=`<table class="tech"><colgroup>${cols}</colgroup><tbody>`;
+    html+=`<tr><th class="stub">№ сменной захватки</th>`;
+    data.shifts.forEach((s,i)=>{
+        html+=`<th>Захватка ${esc(s.name)}<div style="font-weight:normal;margin-top:5px">Длина: ${+s.length||0} м</div></th>`;
+        if(b.enabled&&i+1===breakAfter)html+=`<td class="break-cell" rowspan="5"><span>${esc(b.text)}</span></td>`;
+    });
+    html+='</tr>';
+    html+=`<tr><th class="stub">Наименование процессов</th>`;
+    data.shifts.forEach(s=>{html+=`<td><ol class="oplist">${s.operations.length?s.operations.map(op=>`<li>${esc(op.name)}</li>`).join(""):'<li>Работы не добавлены</li>'}</ol></td>`});
+    html+='</tr>';
+    html+=`<tr><th class="stub">Машины, потребные на каждую схему, и их загрузка на захватках</th>`;
+    data.shifts.forEach(s=>{
+        let all=[];s.operations.forEach(op=>op.machines.forEach(m=>all.push(m)));
+        if(!all.length){html+='<td>Не указаны</td>';return}
+        html+=`<td><ul class="machlist">${all.map((m,j)=>`<li><span class="mname">${j+1}. ${esc(m.name)}</span><span class="mload">загрузка: ${(+m.load||0).toFixed(2)} · ${hoursToTime(m.start||0)}–${hoursToTime((m.start||0)+(m.duration||0))}</span></li>`).join('')}</ul></td>`;
+    });
+    html+='</tr>';
+    html+=`<tr><th class="stub">Схема организации потока</th>`;
+    data.shifts.forEach(s=>{html+=cellSchemeHTML(s)});
+    html+='</tr>';
+    html+=`<tr><th class="stub hour-stub"><div class="hour-title">Почасовой график работ</div><span class="time-label">Время, час</span></th>`;
+    data.shifts.forEach(s=>html+=hourGraphSVG(s));
+    html+='</tr>';
+    html+='</tbody></table>';
+    // Единая стрелка направления потока — отдельным блоком, вне таблицы
+    html+=`<div class="direction-line"><svg class="direction-arrow" viewBox="0 0 1000 28" preserveAspectRatio="none"><line x1="12" y1="17" x2="988" y2="17" stroke="#dc2626" stroke-width="2.5"/><polygon points="${data.direction==='left'?'12,17 24,10 24,24':'988,17 976,10 976,24'}" fill="#dc2626"/><text x="500" y="10" text-anchor="middle">Направление потока</text></svg></div>`;
+    return html;
+}
+
+function renderMain(){
+    $("oObj").textContent=data.obj;$("oOrg").textContent=data.org;$("oKind").textContent=data.kind;
+    $("oHours").textContent=data.hours;$("oSubtitle").textContent=data.subtitle;
+    const noteTxt=(data.note||"").trim();
+    $("oNote").textContent=data.note;
+    $("oNoteBox").style.display=noteTxt?"":"none";
+    $("tableWrap").innerHTML=buildTableHTML();
+    $("paper").classList.remove("fmt-a3","fmt-a4");$("paper").classList.add("fmt-"+data.format);
+    $("paperMini").classList.remove("fmt-a3","fmt-a4");$("paperMini").classList.add("fmt-"+data.format);
+    let pageStyle=document.getElementById("pageStyle");if(!pageStyle){pageStyle=document.createElement("style");pageStyle.id="pageStyle";document.head.appendChild(pageStyle)}
+    pageStyle.textContent=data.format==="a4"?"@page{size:A4 landscape;margin:8mm}":"@page{size:A3 landscape;margin:8mm}";
+    // Обновляем "мини-лист", если он открыт
+    if($("sheetView").style.display==="flex"){
+        $("miniObj").textContent=data.obj;$("miniOrg").textContent=data.org;$("miniKind").textContent=data.kind;
+        $("miniHours").textContent=data.hours;$("miniSubtitle").textContent=data.subtitle;
+        $("miniNote").textContent=data.note;
+        $("miniNoteBox").style.display=noteTxt?"":"none";
+        $("miniTableWrap").innerHTML=buildTableHTML();
+    }
+}
+
+/* ============ МАСШТАБ ============ */
+function computeFitZoom(){
+    const wrap=$("fitwrap");
+    wrap.style.zoom="1";void wrap.offsetWidth;
+    const natW=wrap.offsetWidth,natH=wrap.offsetHeight;
+    const size=PAGE[data.format];
+    const availW=(size.w-2*(MARGIN_MM+2))*MM, availH=(size.h-2*(MARGIN_MM+2))*MM;
+    const autoZoom=Math.min(1, availW/natW, availH/natH);
+    const zoom = data.fitOne ? autoZoom : Math.min(1,(data.fitScale||100)/100);
+    return {natW,natH,availW,availH,autoZoom,zoom};
+}
+function applyPrintZoom(){
+    const r=computeFitZoom();
+    document.documentElement.style.setProperty("--print-zoom", r.zoom);
+    let st=document.getElementById("printZoomStyle");
+    if(!st){st=document.createElement("style");st.id="printZoomStyle";document.head.appendChild(st)}
+    st.textContent=`@media print { .fitwrap { zoom: ${r.zoom}; } .paper { min-height: 0 !important; } }`;
+    return r;
+}
+
+function checkFit(){
+    general();
+    // Заполним мини-лист актуальной моделью
+    renderMain();
+    const r=applyPrintZoom();
+    const size=PAGE[data.format];
+    const sv=$("sheetView");sv.style.display="flex";
+    $("miniFitwrap").style.zoom=r.zoom;
+    const pageWpx=size.w*MM, pageHpx=size.h*MM;
+    const panelW=Math.min(sv.clientWidth-20,420), panelH=520;
+    const previewScale=Math.min(panelW/pageWpx, panelH/pageHpx);
+    const frame=$("sheetFrame");
+    frame.style.width=(pageWpx*previewScale)+"px";
+    frame.style.height=(pageHpx*previewScale)+"px";
+    const inner=$("sheetInner");
+    inner.style.transform=`scale(${previewScale})`;
+    inner.style.transformOrigin="top left";
+    // ВАЖНО: miniFitwrap рендерится в реальных размерах A3/A4 в мм через .paper
+    // Измеряем натуральную высоту по основному fitwrap (он идентичен по содержимому)
+    const natHmm=(r.natH/MM).toFixed(0), natWmm=(r.natW/MM).toFixed(0);
+    const availHmm=(r.availH/MM).toFixed(0);
+    const fitZoomPct=Math.round(r.autoZoom*100);
+    const appliedPct=Math.round(r.zoom*100);
+    const fits=(r.natH*r.zoom)<=r.availH+1;
+    let msg=`Формат: <b>${data.format.toUpperCase()}</b> (${size.w}×${size.h} мм). Доступно по высоте: <b>${availHmm} мм</b>. `;
+    msg+=`Содержимое при 100%: <b>${natWmm}×${natHmm} мм</b>. Масштаб печати: <b>${appliedPct}%</b>. `;
+    if(fits){msg+=`<span class="ok">Помещается в один лист.</span>`;frame.style.outline="none"}
+    else{msg+=`<span class="bad">Не помещается. Требуется ≤ ${fitZoomPct}%.</span>`;frame.style.outline="2px solid #dc2626";frame.style.outlineOffset="-2px"}
+    $("fitInfo").innerHTML=msg;
+    if(data.fitOne){data.fitScale=fitZoomPct;$("fitScale").value=fitZoomPct}
+}
+
+function updateDoc(){
+    general();
+    document.body.classList.toggle("format-a4",data.format==="a4");
+    $("fitOne").checked=!!data.fitOne;$("fitScale").value=data.fitScale||100;
+    renderMain();
+    applyPrintZoom();
+    if($("sheetView").style.display==="flex") checkFit();
+    clearStale();
+}
+function printDocument(){try{general();updateDoc();requestAnimationFrame(()=>requestAnimationFrame(()=>{window.focus();window.print()}))}catch(err){console.error(err);alert('Не удалось подготовить документ к печати.')}}
+function save(){general();let a=document.createElement("a"),url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));a.href=url;a.download="tehnologicheskaya-karta.json";a.click();URL.revokeObjectURL(url)}
+function load(e){let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let d=JSON.parse(r.result);if(!Array.isArray(d.shifts)||!d.shifts.length)throw Error();data={...data,...d};
+    if(!data.organizationalBreak)data.organizationalBreak={enabled:false,after:1,text:"организационный перерыв 2 смены"};
+    if(!data.userSchemes)data.userSchemes={};
+    data.shifts=data.shifts.map((s,i)=>{
+        let ops=[];
+        if(Array.isArray(s.operations)){
+            ops=s.operations.map(op=>{
+                const machines=Array.isArray(op.machines)?op.machines.map(m=>{
+                    if(typeof m==="string")return{name:m,load:0,start:0,duration:data.hours};
+                    return{name:m.name||"",load:+m.load||0,start:+(m.start??0),duration:+(m.duration??data.hours)};
+                }):[];
+                return{name:String(op.name||""),machines};
+            });
+        }
+        return {name:String(s.name||roman[i]||i+1),length:+s.length||100,operations:ops};
+    });
+    if(d.shiftStart!==undefined)data.shiftStart=+d.shiftStart;
+    $("obj").value=data.obj;$("kind").value=data.kind;$("org").value=data.org;$("subtitle").value=data.subtitle||"";
+    $("hours").value=data.hours;$("shiftStart").value=data.shiftStart;$("format").value=data.format||"a3";$("direction").value=data.direction;
+    $("note").value=data.note||"";$("fitOne").checked=!!data.fitOne;$("fitScale").value=data.fitScale||100;
+    editor();updateDoc()}catch(_){alert("Не удалось прочитать JSON проекта.")}e.target.value=""};r.readAsText(f)}
+
+// Привязка обработчиков (без пересоздания DOM-обёрток)
+["obj","kind","org","subtitle","hours","shiftStart","direction","note"].forEach(id=>{const el=$(id);if(el)el.addEventListener("input",()=>{general();markStale()})});
+["format"].forEach(id=>{const el=$(id);if(el)el.addEventListener("change",()=>{general();updateDoc()})});
+$("fitOne").addEventListener("change",()=>{general();updateDoc()});
+$("fitScale").addEventListener("input",()=>{general();updateDoc()});
+$("breakEnabled").addEventListener("change",e=>setBreakEnabled(e.target.checked));
+$("breakText").addEventListener("change",e=>setBreakText(e.target.value));
+$("breakAfter").addEventListener("change",e=>setBreakAfter(e.target.value));
+
+window.addEventListener("resize",()=>{if($("sheetView")&&$("sheetView").style.display==="flex")checkFit()});
+window.addEventListener("beforeprint",()=>{applyPrintZoom()});
+
+editor();updateDoc();
+</script></body></html>
